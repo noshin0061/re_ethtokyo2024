@@ -33,7 +33,7 @@ interface ChatMessage {
 }
 
 interface ChatBoxProps {
-  interactionStreamId: string; // 追加：このプロパティを親コンポーネントから渡す必要があります
+  interactionStreamId: string;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
@@ -52,9 +52,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
       const newMessages: ChatMessage[] = []
       querySnapshot.forEach((doc) => {
         const data = doc.data() as ChatMessage
-        if (data.is_comment) {
-          newMessages.push({ ...data, id: doc.id })
-        }
+        newMessages.push({ ...data, id: doc.id })
       })
       setMessages(newMessages)
     })
@@ -109,18 +107,34 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
     return 'Pending...'
   }
 
+  const renderMessage = (msg: ChatMessage) => {
+    if (msg.is_comment) {
+      return (
+        <div key={msg.id} className="mb-2">
+          <span className="font-bold">{msg.wallet_id}: </span>
+          <span>{msg.interaction}</span>
+          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ml-2`}>
+            {formatTimestamp(msg.created_at)}
+          </span>
+        </div>
+      )
+    } else {
+      return (
+        <div key={msg.id} className="mb-2 text-yellow-500">
+          <span className="font-bold">🎉 Super!! 🎉</span>
+          <span> {msg.wallet_id} donated ¥{msg.interaction}!</span>
+          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ml-2`}>
+            {formatTimestamp(msg.created_at)}
+          </span>
+        </div>
+      )
+    }
+  }
+
   return (
     <div className={`${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'} shadow-md rounded-lg overflow-hidden`}>
       <div className="h-96 overflow-y-auto p-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className="mb-2">
-            <span className="font-bold">{msg.wallet_id}: </span>
-            <span>{msg.interaction}</span>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ml-2`}>
-              {formatTimestamp(msg.created_at)}
-            </span>
-          </div>
-        ))}
+      {messages.map((msg) => renderMessage(msg))}
       </div>
       <form onSubmit={handleSendMessage} className="p-4 border-t">
         <div className="flex">
@@ -164,5 +178,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
     </div>
   )
 }
+
+
 
 export default ChatBox

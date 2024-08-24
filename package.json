@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/circomlibjs": "^0.1.6"
+  }
+}

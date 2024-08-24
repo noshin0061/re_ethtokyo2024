@@ -146,12 +146,14 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <p className="text-xl font-semibold mb-4">利用可能なコンテンツ数: {contents.length}</p>
             {contents.map((content) => (
-              <div key={content.id} className="border p-4 rounded-lg">
-                <p className="text-sm text-gray-500">ドキュメントID: {content.id}</p>
-                <p className="text-sm text-gray-500">作成日時: {content.created_at}</p>
-                <p className="text-sm text-gray-500">インタクションストリームID: {content.interaction_stream_id}</p>
-                <p className="text-sm text-gray-500">ウォレットID: {content.wallet_id}</p>
-              </div>
+              <Link href={`/stream/${content.id}`} key={content.id}>
+                <div className="border p-4 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <p className="text-sm text-gray-500">ドキュメントID: {content.id}</p>
+                  <p className="text-sm text-gray-500">作成日時: {content.created_at}</p>
+                  <p className="text-sm text-gray-500">インタラクションストリームID: {content.interaction_stream_id}</p>
+                  <p className="text-sm text-gray-500">ウォレットID: {content.wallet_id}</p>
+                </div>
+              </Link>
             ))}
           </div>
         </div>

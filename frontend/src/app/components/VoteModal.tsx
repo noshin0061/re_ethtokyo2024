@@ -37,26 +37,26 @@ interface VoteModalProps {
         try {
           await window.ethereum.request({ method: 'eth_requestAccounts' })
           setIsConnected(true)
-          setStatus('ウォレットが接続されました')
+          setStatus('Wallet connected')
         } catch (error) {
           console.error('Failed to connect wallet:', error)
-          setStatus('ウォレットの接続に失敗しました')
+          setStatus('Failed to connect wallet')
         }
       } else {
-        setStatus('MetaMaskがインストールされていません')
+        setStatus('MetaMask is not installed')
       }
     }
   
     const handleVote = async () => {
         if (!isConnected) {
-          setStatus('まずウォレットを接続してください');
+          setStatus('Please connect your wallet');
           return;
         }
         if (vote === null) {
-          setStatus('評価を選択してください');
+          setStatus('Please select a vote');
           return;
         }
-        setStatus('処理中...');
+        setStatus('Generating ZK proof...');
       
         try {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -77,19 +77,19 @@ interface VoteModalProps {
           });
       
           if (!response.ok) {
-            throw new Error('ZKプルーフ生成に失敗しました');
+            throw new Error('Failed to generate ZK proof');
           }
       
           const { proof, publicSignals } = await response.json();
       
           const tx = await contract.castVote(proof.pi_a, proof.pi_b, proof.pi_c, publicSignals);
       
-          setStatus('トランザクション処理中...');
+          setStatus('Processing vote...');
           await tx.wait();
-          setStatus('投票が完了しました！');
+          setStatus('Vote successful!');
         } catch (error: any) {
-          console.error('投票エラー:', error);
-          setStatus(`投票に失敗しました: ${error.message}`);
+          console.error('Vote Error', error);
+          setStatus(`Failed to vote`);
         }
       };
       
@@ -97,13 +97,13 @@ interface VoteModalProps {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">配信者を評価する</h2>
+        <h2 className="text-2xl font-bold mb-4">Vote</h2>
         {!isConnected && (
           <button
             onClick={connectWallet}
             className="w-full bg-green-500 text-white p-3 rounded font-bold mb-4"
           >
-            ウォレットを接続
+            Connect Wallet
           </button>
         )}
         {isConnected && (
@@ -126,7 +126,7 @@ interface VoteModalProps {
               onClick={handleVote}
               className="w-full bg-blue-500 text-white p-3 rounded font-bold mb-2"
             >
-              投票する
+              Vote
             </button>
           </>
         )}
@@ -134,7 +134,7 @@ interface VoteModalProps {
           onClick={onClose}
           className="w-full bg-gray-300 p-3 rounded font-bold"
         >
-          キャンセル
+          Close
         </button>
         {status && <p className="mt-4 text-center">{status}</p>}
       </div>

@@ -22,7 +22,7 @@ const db = getFirestore(app);
 
 interface DonationModalProps {
   onClose: () => void;
-  interactionStreamId: string; // 追加：このプロパティを親コンポーネントから渡す必要があります
+  interactionStreamId: string;
 }
 
 const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStreamId }) => {
@@ -52,11 +52,11 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStrea
         const doc = querySnapshot.docs[0]
         setRecipientAddress(doc.data().wallet_id)
       } else {
-        setStatus('寄付先アドレスが見つかりません')
+        setStatus('Recipient address not found')
       }
     } catch (error) {
       console.error('Error fetching recipient address:', error)
-      setStatus('寄付先アドレスの取得に失敗しました')
+      setStatus('Failed to fetch recipient address')
     }
   }
 
@@ -77,10 +77,10 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStrea
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' })
         setIsConnected(true)
-        setStatus('ウォレットが接続されました')
+        setStatus('Wallet connected')
       } catch (error) {
         console.error('Failed to connect wallet:', error)
-        setStatus('ウォレットの接続に失敗しました')
+        setStatus('Failed to connect wallet')
       }
     } else {
       setStatus('MetaMaskがインストールされていません')

@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 
 export default function BroadcastPage() {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const params = useParams();
+  const id = params.id;
 
   const startBroadcasting = async () => {
     try {
@@ -33,7 +36,7 @@ export default function BroadcastPage() {
     } else if (!isBroadcasting && videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, [isBroadcasting]);
+  }, [isBroadcasting, videoRef, streamRef]);
 
   useEffect(() => {
     return () => {

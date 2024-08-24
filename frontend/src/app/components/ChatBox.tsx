@@ -7,6 +7,8 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { ethers } from 'ethers'
 import { useTheme } from '../../contexts/ThemeContext'
+import { Send } from 'lucide-react';
+
 
 // Firebase configuration
 const firebaseConfig = {
@@ -129,8 +131,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
             className={`flex-grow mr-2 p-2 border rounded ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
             placeholder="Type a message..."
           />
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">
-            Send
+          <button type="submit" className="bg-blue-500 text-white p-2 rounded mr-2">
+            <Send size={24} />
           </button>
         </div>
         <div className="flex mt-2 space-x-2">

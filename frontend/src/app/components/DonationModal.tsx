@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { getEthPrice, jpyToEth } from '@/utils/getEthPrice'
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -132,6 +132,15 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStrea
 
       setStatus('Transaction sent. Waiting for confirmation...')
       await tx.wait()
+      // Firebaseにデータを追加
+      const interactionsRef = collection(db, 'interaction_streams', interactionStreamId, 'interactions')
+      await addDoc(interactionsRef, {
+        interaction: amount, // 金額を保存
+        created_at: serverTimestamp(),
+        is_comment: false, // コメントではないのでfalse
+        wallet_id: await signer.getAddress(), // 送金者のアドレス
+      })
+
       setStatus('Successfully sent!')
     } catch (error: any) {
       console.error('Error', error)

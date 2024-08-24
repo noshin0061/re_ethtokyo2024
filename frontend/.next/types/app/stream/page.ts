@@ -1,4 +1,4 @@
-// File: /Users/ryunoshin/Documents/dev/eth2024_ver5のコピー/frontend/src/app/stream/page.tsx
+// File: /Users/kojok/Desktop/re_ethtokyo2024/frontend/src/app/stream/page.tsx
 import * as entry from '../../../../src/app/stream/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

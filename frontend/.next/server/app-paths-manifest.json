@@ -1,5 +1,5 @@
 {
-  "/page": "app/page.js",
+  "/stream/page": "app/stream/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/stream/page": "app/stream/page.js"
+  "/api/generateProof/route": "app/api/generateProof/route.js"
 }

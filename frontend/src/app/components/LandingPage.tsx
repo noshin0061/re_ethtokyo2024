@@ -81,14 +81,14 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  const createContent = async () => {
+  const createContent = async (): Promise<string | null> => {
     try {
       const isLoggedIn = await checkMetamaskLogin();
       if (!isLoggedIn) {
         const loginSuccess = await loginWithMetamask();
         if (!loginSuccess) {
           setStatus('Please login with Metamask to create content');
-          return;
+          return null;
         }
       }
 
@@ -103,12 +103,14 @@ const LandingPage: React.FC = () => {
         wallet_id: walletId
       };
 
-      await addDoc(contentsCollection, newContent);
+      const docRef = await addDoc(contentsCollection, newContent);
       setStatus('Content created successfully');
       fetchContents();
+      return docRef.id;
     } catch (error) {
       console.error('Error has occured creating contents', error);
       setStatus('Error creating content');
+      return null;
     }
   };
 
@@ -120,7 +122,17 @@ const LandingPage: React.FC = () => {
         <p className="text-xl mb-8">Dive into the new Live Stream 👉</p>
         <div className="space-y-4">
           <div>
-            <Link onClick={createContent} href={contents.length > 0 ? `/broadcast/${contents[0].id}` : '#'} className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center">
+            <Link 
+              onClick={async (e) => {
+                e.preventDefault();
+                const newContentId = await createContent();
+                if (newContentId) {
+                  window.location.href = `/broadcast/${newContentId}`;
+                }
+              }} 
+              href="#" 
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center"
+            >
               <span>One Click and You're on Live</span>
             </Link>
           </div>

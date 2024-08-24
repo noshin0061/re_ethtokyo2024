@@ -1,13 +1,13 @@
 "use client"
 
 import React from 'react'
-import StreamPlayer from '../components/StreamPlayer'
-import ChatBox from '../components/ChatBox'
-import HeartOverlay from '../components/HeartOverlay'
-import BasketIcon from '../components/BasketIcon'
-import EthereumModal from '../components/EthereumModal'
-import ThemeToggle from '../components/ThemeToggle'
-import { useTheme } from '../../contexts/ThemeContext'
+import StreamPlayer from '../../components/StreamPlayer'
+import ChatBox from '../../components/ChatBox'
+import HeartOverlay from '../../components/HeartOverlay'
+import BasketIcon from '../../components/BasketIcon'
+import EthereumModal from '../../components/EthereumModal'
+import ThemeToggle from '../../components/ThemeToggle'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 export default function StreamPage() {
   const { isDarkMode } = useTheme()

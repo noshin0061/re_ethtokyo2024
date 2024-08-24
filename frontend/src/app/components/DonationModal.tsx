@@ -151,7 +151,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStrea
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">Send ETH</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Send your love to the streamer</h2>
         {!isConnected && (
           <button
             onClick={connectWallet}
@@ -162,9 +162,6 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStrea
         )}
         {isConnected && (
           <>
-            <div className="mb-4">
-              <p className="text-sm text-gray-600">Send To The Streamer</p>
-            </div>
             <div className="mb-4">
               <div className="text-3xl font-bold text-center mb-2">¥{amount}</div>
               <div className="grid grid-cols-3 gap-2">

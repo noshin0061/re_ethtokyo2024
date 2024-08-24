@@ -37,22 +37,22 @@ const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
             try {
                 await window.ethereum.request({ method: 'eth_requestAccounts' })
                 setIsConnected(true)
-                setStatus('ウォレットが接続されました')
+                setStatus('Wallet connected')
             } catch (error) {
                 console.error('Failed to connect wallet:', error)
-                setStatus('ウォレットの接続に失敗しました')
+                setStatus('Failed to connect wallet')
             }
         } else {
-            setStatus('MetaMaskがインストールされていません')
+            setStatus('MetaMask is not installed')
         }
     }
 
     const handleVote = async () => {
       if (!isConnected || vote === null) {
-          setStatus('ウォレットを接続し、評価を選択してください');
+          setStatus('Connect wallet and vote');
           return;
       }
-      setStatus('処理中...');
+      setStatus('Processing vote...');
   
       try {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -79,17 +79,17 @@ const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
   
           const tx = await contract.castVote(pA, pB, pC, pubSignals);
   
-          setStatus('トランザクション処理中...');
+          setStatus('Waiting for confirmation...');
           await tx.wait();
-          setStatus('投票が完了しました！');
+          setStatus('Vote successful!');
       } catch (error: any) {
-          console.error('投票エラー:', error);
+          console.error('Vote Error', error);
           if (error.reason) {
-              setStatus(`投票に失敗しました: ${error.reason}`);
+              setStatus(`Vote failed`);
           } else if (error.message) {
-              setStatus(`投票に失敗しました: ${error.message}`);
+              setStatus(`Vote failed`);
           } else {
-              setStatus('投票に失敗しました: 不明なエラー');
+              setStatus('Vote failed: An unknown error occurred');
           }
       }
   };
@@ -98,13 +98,13 @@ const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">配信者を評価する</h2>
+        <h2 className="text-2xl font-bold mb-4">Vote for the streamer</h2>
         {!isConnected && (
           <button
             onClick={connectWallet}
             className="w-full bg-green-500 text-white p-3 rounded font-bold mb-4"
           >
-            ウォレットを接続
+            Connect Wallet
           </button>
         )}
         {isConnected && (
@@ -127,7 +127,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
               onClick={handleVote}
               className="w-full bg-blue-500 text-white p-3 rounded font-bold mb-2"
             >
-              投票する
+              Vote
             </button>
           </>
         )}
@@ -135,7 +135,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
           onClick={onClose}
           className="w-full bg-gray-300 p-3 rounded font-bold"
         >
-          キャンセル
+          Close
         </button>
         {status && <p className="mt-4 text-center">{status}</p>}
       </div>

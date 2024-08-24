@@ -64,25 +64,29 @@ export default function StreamPage() {
   }, [params.id])
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div className="flex justify-center items-center h-screen">Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error}</div>
+    return <div className="flex justify-center items-center h-screen">Error: {error}</div>
   }
 
   return (
     <div className={`container mx-auto p-4 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
       <h1 className="text-2xl font-bold mb-4">Live Streaming Platform</h1>
-      <div className="relative">
-        <StreamPlayer streamName={streamName} serverUrl={serverUrl} />
-      </div>
-      <div className="mt-4">
-        {interactionStreamId ? (
-          <ChatBox interactionStreamId={interactionStreamId} />
-        ) : (
-          <div>Chat not available</div>
-        )}
+      <div className="lg:flex lg:space-x-4">
+        <div className="lg:w-2/3">
+          <div className="relative aspect-video">
+            <StreamPlayer streamName={streamName} serverUrl={serverUrl} />
+          </div>
+        </div>
+        <div className="mt-4 lg:mt-0 lg:w-1/3">
+          {interactionStreamId ? (
+            <ChatBox interactionStreamId={interactionStreamId} />
+          ) : (
+            <div>Chat not available</div>
+          )}
+        </div>
       </div>
     </div>
   )

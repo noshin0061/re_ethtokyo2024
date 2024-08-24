@@ -155,14 +155,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
             onClick={() => setIsDonationModalOpen(true)}
             className="flex-1 bg-green-500 text-white px-4 py-2 rounded"
           >
-            Send ETH
+            😍 Send LOVE 😍
           </button>
           <button
             type="button"
             onClick={() => setIsVoteModalOpen(true)}
             className="flex-1 bg-purple-500 text-white px-4 py-2 rounded"
           >
-            Vote
+            👍 Vote 👎
           </button>
         </div>
       </form>

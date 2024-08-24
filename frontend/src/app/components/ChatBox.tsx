@@ -6,6 +6,7 @@ import VoteModal from './VoteModal'
 import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { ethers } from 'ethers'
+import { useTheme } from '../../contexts/ThemeContext'
 
 // Firebase configuration
 const firebaseConfig = {
@@ -34,6 +35,7 @@ interface ChatBoxProps {
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
+  const { isDarkMode } = useTheme()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false)
@@ -106,13 +108,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
   }
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+    <div className={`${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'} shadow-md rounded-lg overflow-hidden`}>
       <div className="h-96 overflow-y-auto p-4">
         {messages.map((msg) => (
           <div key={msg.id} className="mb-2">
             <span className="font-bold">{msg.wallet_id}: </span>
             <span>{msg.interaction}</span>
-            <span className="text-xs text-gray-500 ml-2">
+            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ml-2`}>
               {formatTimestamp(msg.created_at)}
             </span>
           </div>
@@ -124,7 +126,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-grow mr-2 p-2 border rounded"
+            className={`flex-grow mr-2 p-2 border rounded ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
             placeholder="Type a message..."
           />
           <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded mr-2">

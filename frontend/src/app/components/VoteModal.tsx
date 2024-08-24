@@ -5,7 +5,7 @@ import { ethers } from 'ethers'
 import AnonymousVotingArtifact from '../../../../backend/artifacts/contracts/AnonymousVoting.sol/AnonymousVoting.json' // コントラクトのABI
 import { generateProof } from '../../../../backend/scripts/generate-proof' // ZKプルーフ生成関数
 
-const ANONYMOUS_VOTING_ADDRESS = "0xba2d3Ef84a820F58CB9532C3186750Ab22D19339";
+const ANONYMOUS_VOTING_ADDRESS = "0xC59A20825F6cB5d8d9424c9cE3b5F0A81CfE9618";
 
 interface VoteModalProps {
     onClose: () => void;

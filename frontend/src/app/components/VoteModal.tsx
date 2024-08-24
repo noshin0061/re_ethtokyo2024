@@ -2,96 +2,97 @@
 
 import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
-import AnonymousVotingArtifact from '../../../../backend/artifacts/contracts/AnonymousVoting.sol/AnonymousVoting.json' // コントラクトのABI
-import { generateProof } from '../../../../backend/scripts/generate-proof' // ZKプルーフ生成関数
+import AnonymousVotingArtifact from '../../../../backend/artifacts/contracts/AnonymousVoting.sol/AnonymousVoting.json'
+import { generateProof } from '../../utils/generate-proof' // フロントエンドのutils/generate-proof.tsを参照するように変更
 
 const ANONYMOUS_VOTING_ADDRESS = "0xC59A20825F6cB5d8d9424c9cE3b5F0A81CfE9618";
 
 interface VoteModalProps {
     onClose: () => void;
-  }
-  
-  const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
+}
+
+const VoteModal: React.FC<VoteModalProps> = ({ onClose }) => {
     const [vote, setVote] = useState<boolean | null>(null)
     const [status, setStatus] = useState('')
     const [isConnected, setIsConnected] = useState(false)
-  
+
     useEffect(() => {
-      checkConnection()
+        checkConnection()
     }, [])
-  
+
     const checkConnection = async () => {
-      if (typeof window.ethereum !== 'undefined') {
-        try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum)
-          const accounts = await provider.listAccounts()
-          setIsConnected(accounts.length > 0)
-        } catch (error) {
-          console.error('Connection check failed:', error)
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum)
+                const accounts = await provider.listAccounts()
+                setIsConnected(accounts.length > 0)
+            } catch (error) {
+                console.error('Connection check failed:', error)
+            }
         }
-      }
     }
-  
+
     const connectWallet = async () => {
-      if (typeof window.ethereum !== 'undefined') {
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' })
-          setIsConnected(true)
-          setStatus('ウォレットが接続されました')
-        } catch (error) {
-          console.error('Failed to connect wallet:', error)
-          setStatus('ウォレットの接続に失敗しました')
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' })
+                setIsConnected(true)
+                setStatus('ウォレットが接続されました')
+            } catch (error) {
+                console.error('Failed to connect wallet:', error)
+                setStatus('ウォレットの接続に失敗しました')
+            }
+        } else {
+            setStatus('MetaMaskがインストールされていません')
         }
-      } else {
-        setStatus('MetaMaskがインストールされていません')
-      }
     }
-  
+
     const handleVote = async () => {
-        if (!isConnected) {
-          setStatus('まずウォレットを接続してください');
+      if (!isConnected || vote === null) {
+          setStatus('ウォレットを接続し、評価を選択してください');
           return;
-        }
-        if (vote === null) {
-          setStatus('評価を選択してください');
-          return;
-        }
-        setStatus('処理中...');
-      
-        try {
+      }
+      setStatus('処理中...');
+  
+      try {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const signer = provider.getSigner();
-      
+  
           const contract = new ethers.Contract(ANONYMOUS_VOTING_ADDRESS, AnonymousVotingArtifact.abi, signer);
-      
+  
           const nullifier = ethers.utils.randomBytes(32);
           const secret = ethers.utils.randomBytes(32);
-      
-          // APIルートにリクエストを送信してZKプルーフを生成
-          const response = await fetch('/api/generateProof', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ vote: vote ? 1 : 0, nullifier: ethers.utils.hexlify(nullifier), secret: ethers.utils.hexlify(secret) }),
-          });
-      
-          if (!response.ok) {
-            throw new Error('ZKプルーフ生成に失敗しました');
-          }
-      
-          const { proof, publicSignals } = await response.json();
-      
-          const tx = await contract.castVote(proof.pi_a, proof.pi_b, proof.pi_c, publicSignals);
-      
+  
+          const { proof, publicSignals } = await generateProof(
+              vote ? 1 : 0,
+              ethers.utils.hexlify(nullifier),
+              ethers.utils.hexlify(secret)
+          );
+  
+          // プルーフデータの形式を調整
+          const pA = [proof.pi_a[0], proof.pi_a[1]];
+          const pB = [[proof.pi_b[0][1], proof.pi_b[0][0]], [proof.pi_b[1][1], proof.pi_b[1][0]]];
+          const pC = [proof.pi_c[0], proof.pi_c[1]];
+          const pubSignals = publicSignals.map(signal => ethers.BigNumber.from(signal));
+  
+          console.log("Sending proof:", { pA, pB, pC, pubSignals });
+  
+          const tx = await contract.castVote(pA, pB, pC, pubSignals);
+  
           setStatus('トランザクション処理中...');
           await tx.wait();
           setStatus('投票が完了しました！');
-        } catch (error: any) {
+      } catch (error: any) {
           console.error('投票エラー:', error);
-          setStatus(`投票に失敗しました: ${error.message}`);
-        }
-      };
+          if (error.reason) {
+              setStatus(`投票に失敗しました: ${error.reason}`);
+          } else if (error.message) {
+              setStatus(`投票に失敗しました: ${error.message}`);
+          } else {
+              setStatus('投票に失敗しました: 不明なエラー');
+          }
+      }
+  };
       
 
   return (

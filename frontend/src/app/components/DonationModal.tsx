@@ -3,17 +3,34 @@
 import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { getEthPrice, jpyToEth } from '@/utils/getEthPrice'
+import { initializeApp } from 'firebase/app'
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+
+// Firebaseの設定
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+// Firebaseの初期化
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 interface DonationModalProps {
   onClose: () => void;
+  interactionStreamId: string; // 追加：このプロパティを親コンポーネントから渡す必要があります
 }
 
-const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
+const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStreamId }) => {
   const [amount, setAmount] = useState('')
-  const [address, setAddress] = useState('')
   const [status, setStatus] = useState('')
   const [ethPrice, setEthPrice] = useState<number | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [recipientAddress, setRecipientAddress] = useState('')
 
   const minAmount = 100 // 最小金額（円）
   const maxAmount = 100000 // 最大金額（円）
@@ -22,7 +39,26 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
   useEffect(() => {
     getEthPrice().then(setEthPrice).catch(console.error)
     checkConnection()
-  }, [])
+    fetchRecipientAddress()
+  }, [interactionStreamId])
+
+  const fetchRecipientAddress = async () => {
+    try {
+      const contentsRef = collection(db, 'contents')
+      const q = query(contentsRef, where('interaction_stream_id', '==', interactionStreamId))
+      const querySnapshot = await getDocs(q)
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0]
+        setRecipientAddress(doc.data().wallet_id)
+      } else {
+        setStatus('寄付先アドレスが見つかりません')
+      }
+    } catch (error) {
+      console.error('Error fetching recipient address:', error)
+      setStatus('寄付先アドレスの取得に失敗しました')
+    }
+  }
 
   const checkConnection = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -72,8 +108,8 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
       setStatus('まずウォレットを接続してください')
       return
     }
-    if (!ethers.utils.isAddress(address)) {
-      setStatus('無効なイーサリアムアドレスです')
+    if (!ethers.utils.isAddress(recipientAddress)) {
+      setStatus('無効な寄付先アドレスです')
       return
     }
     if (parseFloat(amount) < minAmount) {
@@ -90,7 +126,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
       const signer = provider.getSigner()
       
       const tx = await signer.sendTransaction({
-        to: address,
+        to: recipientAddress,
         value: ethers.utils.parseEther(ethAmount)
       })
 
@@ -99,7 +135,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
       setStatus('寄付が完了しました！')
     } catch (error: any) {
       console.error('寄付エラー:', error)
-      setStatus(`寄付に失敗しました`)
+      setStatus(`寄付に失敗しました: ${error.message}`)
     }
   }
 
@@ -118,17 +154,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
         {isConnected && (
           <>
             <div className="mb-4">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                寄付先アドレス
-              </label>
-              <input
-                type="text"
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="0x..."
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
+              <p className="text-sm text-gray-600">寄付先アドレスが設定されています</p>
             </div>
             <div className="mb-4">
               <div className="text-3xl font-bold text-center mb-2">¥{amount}</div>

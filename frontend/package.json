@@ -10,19 +10,24 @@
   },
   "dependencies": {
     "@types/hls.js": "^1.0.0",
+    "circomlibjs": "^0.1.7",
+    "crypto-browserify": "^3.12.0",
     "ethers": "^5.7.2",
     "firebase": "^10.13.0",
     "hls.js": "^1.5.15",
+    "lucide-react": "^0.435.0",
     "next": "14.2.6",
     "react": "^18",
     "react-dom": "^18",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "snarkjs": "^0.7.4"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
+    "@types/snarkjs": "^0.7.8",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
     "postcss": "^8",

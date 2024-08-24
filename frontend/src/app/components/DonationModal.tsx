@@ -3,17 +3,34 @@
 import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { getEthPrice, jpyToEth } from '@/utils/getEthPrice'
+import { initializeApp } from 'firebase/app'
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+
+// Firebaseの設定
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+// Firebaseの初期化
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 interface DonationModalProps {
   onClose: () => void;
+  interactionStreamId: string;
 }
 
-const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
+const DonationModal: React.FC<DonationModalProps> = ({ onClose, interactionStreamId }) => {
   const [amount, setAmount] = useState('')
-  const [address, setAddress] = useState('')
   const [status, setStatus] = useState('')
   const [ethPrice, setEthPrice] = useState<number | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [recipientAddress, setRecipientAddress] = useState('')
 
   const minAmount = 100 // 最小金額（円）
   const maxAmount = 100000 // 最大金額（円）
@@ -22,7 +39,26 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
   useEffect(() => {
     getEthPrice().then(setEthPrice).catch(console.error)
     checkConnection()
-  }, [])
+    fetchRecipientAddress()
+  }, [interactionStreamId])
+
+  const fetchRecipientAddress = async () => {
+    try {
+      const contentsRef = collection(db, 'contents')
+      const q = query(contentsRef, where('interaction_stream_id', '==', interactionStreamId))
+      const querySnapshot = await getDocs(q)
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0]
+        setRecipientAddress(doc.data().wallet_id)
+      } else {
+        setStatus('Recipient address not found')
+      }
+    } catch (error) {
+      console.error('Error fetching recipient address:', error)
+      setStatus('Failed to fetch recipient address')
+    }
+  }
 
   const checkConnection = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -41,13 +77,13 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' })
         setIsConnected(true)
-        setStatus('ウォレットが接続されました')
+        setStatus('Wallet connected')
       } catch (error) {
         console.error('Failed to connect wallet:', error)
-        setStatus('ウォレットの接続に失敗しました')
+        setStatus('Failed to connect wallet')
       }
     } else {
-      setStatus('MetaMaskがインストールされていません')
+      setStatus('MetaMask is not installed')
     }
   }
 
@@ -69,66 +105,56 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
 
   const handleDonation = async () => {
     if (!isConnected) {
-      setStatus('まずウォレットを接続してください')
+      setStatus('Please connect your wallet')
       return
     }
-    if (!ethers.utils.isAddress(address)) {
-      setStatus('無効なイーサリアムアドレスです')
+    if (!ethers.utils.isAddress(recipientAddress)) {
+      setStatus('Invalid recipient address')
       return
     }
     if (parseFloat(amount) < minAmount) {
-      setStatus(`最小金額は${minAmount}円です`)
+      setStatus(`Please enter an amount greater than ¥${minAmount}`)
       return
     }
-    setStatus('処理中...')
+    setStatus('Processing...')
     
     try {
-      if (!ethPrice) throw new Error('ETH価格が取得できませんでした')
+      if (!ethPrice) throw new Error('ETH price not available')
       const ethAmount = jpyToEth(parseFloat(amount), ethPrice)
 
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const signer = provider.getSigner()
       
       const tx = await signer.sendTransaction({
-        to: address,
+        to: recipientAddress,
         value: ethers.utils.parseEther(ethAmount)
       })
 
-      setStatus('トランザクション処理中...')
+      setStatus('Transaction sent. Waiting for confirmation...')
       await tx.wait()
-      setStatus('寄付が完了しました！')
+      setStatus('Successfully sent!')
     } catch (error: any) {
-      console.error('寄付エラー:', error)
-      setStatus(`寄付に失敗しました`)
+      console.error('Error', error)
+      setStatus(`Transaction Error ${error.message}`)
     }
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">寄付する</h2>
+        <h2 className="text-2xl font-bold mb-4">Send ETH</h2>
         {!isConnected && (
           <button
             onClick={connectWallet}
             className="w-full bg-green-500 text-white p-3 rounded font-bold mb-4"
           >
-            ウォレットを接続
+            Connect Wallet
           </button>
         )}
         {isConnected && (
           <>
             <div className="mb-4">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                寄付先アドレス
-              </label>
-              <input
-                type="text"
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="0x..."
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
+              <p className="text-sm text-gray-600">Send To The Streamer</p>
             </div>
             <div className="mb-4">
               <div className="text-3xl font-bold text-center mb-2">¥{amount}</div>
@@ -145,7 +171,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
               </div>
             </div>
             <div className="mb-4">
-              <div className="text-sm mb-2">よく使う金額:</div>
+              <div className="text-sm mb-2">Amount Frequently Used</div>
               <div className="flex justify-between">
                 {suggestedAmounts.map((amt) => (
                   <button
@@ -162,7 +188,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
               onClick={handleDonation}
               className="w-full bg-blue-500 text-white p-3 rounded font-bold mb-2"
             >
-              寄付する
+              Send
             </button>
           </>
         )}
@@ -170,7 +196,7 @@ const DonationModal: React.FC<DonationModalProps> = ({ onClose }) => {
           onClick={onClose}
           className="w-full bg-gray-300 p-3 rounded font-bold"
         >
-          キャンセル
+          Close
         </button>
         {status && <p className="mt-4 text-center">{status}</p>}
       </div>

@@ -139,7 +139,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ interactionStreamId }) => {
             onClick={() => setIsDonationModalOpen(true)}
             className="flex-1 bg-green-500 text-white px-4 py-2 rounded"
           >
-            Donate
+            Send ETH
           </button>
           <button
             type="button"
